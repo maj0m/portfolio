@@ -1,8 +1,68 @@
-html, body {
-  margin: 0;
-  padding: 0;
+@font-face {
+    font-family: 'monogram';
+    src: url('fonts/monogram-extended.ttf');
+}
+
+body {
+    margin: 0;
+    font-family: 'monogram';
+    font-size: 24px;
+    background: #111;
+    color: #eee;
+}
+
+header {
+    text-align: center;
+    padding: 32px 20px;
+}
+
+nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #aaa;
+}
+
+nav a:hover {
+    color: white;
+}
+
+section {
+    max-width: 800px;
+    margin: auto;
+    padding: 40px 20px;
+    background: #555;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #777;
+}
+
+.popup {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: popup-fade 1s ease forwards;
+}
+
+@keyframes popup-fade {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+        font-size: 16px;
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -150%);
+        font-size: 24px;
+    }
 }
 
 canvas {
-  display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
 }

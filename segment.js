@@ -43,7 +43,7 @@ class Segment {
         );
     }
 
-    drawSideFins() {
+    drawSideFins(color) {
         let dir = p5.Vector.sub(this.B, this.A).normalize();
         let normal = createVector(-dir.y, dir.x);
 
@@ -54,13 +54,13 @@ class Segment {
         let leftBase = p5.Vector.add(center, p5.Vector.mult(normal, bodyWidth/2));
         let rightBase = p5.Vector.add(center, p5.Vector.mult(normal, -bodyWidth/2));
         
-        let finAngle = -45 + 40 * sin(frameCount * 2.0); // Between -85 and -5 degrees
+        let finAngle = -60 + 20 * sin(frameCount * 2.0); // between -80 and -40 degrees
         let leftTipOffset = p5.Vector.mult(normal, bodyWidth).rotate(finAngle);
         let rightTipOffset = p5.Vector.mult(normal, -bodyWidth).rotate(-finAngle)
         let leftTip = p5.Vector.add(leftBase, leftTipOffset);
         let rightTip = p5.Vector.add(rightBase, rightTipOffset);
 
-        fill(255, 190, 50);
+        fill(color);
         noStroke();
 
         triangle(

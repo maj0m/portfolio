@@ -30,7 +30,7 @@ section {
     max-width: 800px;
     margin: auto;
     padding: 40px 20px;
-    background: #555;
+    background: #52665fa6;
 }
 
 footer {
@@ -65,4 +65,35 @@ canvas {
     inset: 0;
     z-index: -1;
     pointer-events: none;
+}
+
+#zen-toggle {
+    margin: 0 10px;
+    background: none;
+    border: none;
+    font-family: 'monogram';
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+}
+
+#zen-toggle:hover {
+    color: white;
+}
+
+/* Elements that hide in zen mode */
+.zen-hide {
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    opacity: 1;
+}
+
+body.zen .zen-hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+}
+
+body.zen #zen-toggle {
+    color: #eee;
 }

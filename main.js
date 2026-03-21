@@ -22,3 +22,8 @@ document.addEventListener("click", function (event) {
 
     document.body.appendChild(popup);
 });
+
+// Toggle Zen mode
+function toggleZen() {
+    document.body.classList.toggle('zen');
+}

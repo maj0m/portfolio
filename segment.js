@@ -2,6 +2,7 @@ class Segment {
     constructor(x, y, l, wA, wB, color) {
         this.A = createVector(x, y);
         this.B = createVector(x + l, y);
+        this.dir = p5.Vector.sub(this.B, this.A).normalize();
         this.length = l;
         this.widthA = wA;
         this.widthB = wB;
@@ -10,19 +11,26 @@ class Segment {
 
     follow(x, y) {
         let target = createVector(x, y);
-        let dir = p5.Vector.sub(this.B, target);
+        this.dir = p5.Vector.sub(this.B, target).normalize();
+        let dir = this.dir.copy();
         dir.setMag(this.length);
         this.A = target;
         this.B = p5.Vector.add(this.A, dir);
     }
 
+    setRotation(angle) {
+        let newDir = this.dir.copy();
+        newDir.rotate(angle);
+        newDir.setMag(this.length);
+        this.B = p5.Vector.add(this.A, newDir);
+    }
+
     draw() {
-        let dir = p5.Vector.sub(this.B, this.A).normalize();
-        let normal = createVector(-dir.y, dir.x);
+        let normal = createVector(-this.dir.y, this.dir.x);
         
         let overlap = -2;
-        let front = p5.Vector.add(this.A, p5.Vector.mult(dir, overlap));
-        let back  = p5.Vector.sub(this.B, p5.Vector.mult(dir, overlap));
+        let front = p5.Vector.add(this.A, p5.Vector.mult(this.dir, overlap));
+        let back  = p5.Vector.sub(this.B, p5.Vector.mult(this.dir, overlap));
 
         let aOffset = p5.Vector.mult(normal, this.widthA / 2);
         let bOffset = p5.Vector.mult(normal, this.widthB / 2);
@@ -44,19 +52,18 @@ class Segment {
     }
 
     drawSideFins(color) {
-        let dir = p5.Vector.sub(this.B, this.A).normalize();
-        let normal = createVector(-dir.y, dir.x);
+        let normal = createVector(-this.dir.y, this.dir.x);
 
         let center = p5.Vector.add(this.A, this.B).div(2);
         let bodyWidth = min(this.widthA, this.widthB);
 
-        let baseOffset = p5.Vector.mult(dir, this.length/2);
+        let baseOffset = p5.Vector.mult(this.dir, this.length/2);
         let leftBase = p5.Vector.add(center, p5.Vector.mult(normal, bodyWidth/2));
         let rightBase = p5.Vector.add(center, p5.Vector.mult(normal, -bodyWidth/2));
         
-        let finAngle = -60 + 20 * sin(frameCount * 2.0); // between -80 and -40 degrees
-        let leftTipOffset = p5.Vector.mult(normal, bodyWidth).rotate(finAngle);
-        let rightTipOffset = p5.Vector.mult(normal, -bodyWidth).rotate(-finAngle)
+        let finAngle = 60 + 20 * sin(frameCount * 2.0); // between 40 and 80 degrees
+        let leftTipOffset = p5.Vector.mult(normal, bodyWidth).rotate(-finAngle);
+        let rightTipOffset = p5.Vector.mult(normal, -bodyWidth).rotate(finAngle)
         let leftTip = p5.Vector.add(leftBase, leftTipOffset);
         let rightTip = p5.Vector.add(rightBase, rightTipOffset);
 

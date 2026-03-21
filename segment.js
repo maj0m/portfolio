@@ -25,7 +25,7 @@ class Segment {
         this.B = p5.Vector.add(this.A, newDir);
     }
 
-    draw() {
+    draw(color = this.color) {
         let normal = createVector(-this.dir.y, this.dir.x);
         
         let overlap = -2;
@@ -41,7 +41,7 @@ class Segment {
         let p4 = p5.Vector.add(back, bOffset);
 
         noStroke();
-        fill(this.color);
+        fill(color);
 
         quad(
             p1.x, p1.y,
@@ -51,7 +51,7 @@ class Segment {
         );
     }
 
-    drawSideFins(color) {
+    drawSideFins(color = this.color) {
         let normal = createVector(-this.dir.y, this.dir.x);
 
         let center = p5.Vector.add(this.A, this.B).div(2);

@@ -1,7 +1,7 @@
 let fish = [];
 
 function setup() {
-  angleMode(DEGREES);
+    angleMode(DEGREES);
     createCanvas(window.innerWidth, window.innerHeight);
 
     for(let i = 0; i < 16; i++) {
@@ -11,10 +11,14 @@ function setup() {
 
 function draw() {
     background(180, 210, 200);
-
-    for (let i = 0; i < fish.length; i++) {
-        fish[i].update();
-        fish[i].draw();
+    
+    for (let koi of fish) {
+        koi.drawShadow();
+    }
+    
+    for (let koi of fish) {
+        koi.update();
+        koi.draw();
     }
 }
 

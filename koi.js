@@ -55,18 +55,25 @@ class Koi {
         this.pos = createVector(random(width), random(height));
         this.dir = createVector(random(-1, 1), random(-1, 1)).normalize();
         this.desiredDir = this.dir.copy();
+
+        this.turnSpeed = 120;
         this.framesToNextTurn = 500;
+        this.maxTurnAngle = 90;
+
         this.swimSpeed = 70.0;
         this.minSwimSpeed = 70.0;
-        this.maxSwimSpeed = 120.0;
-        this.tailSpeed = 0.15;
-        this.minTailSpeed = 0.15;
-        this.maxTailSpeed = 0.6;
-        this.tailStrength = 0.04;
-        this.minTailStrength = 0.04;
-        this.maxTailStrength = 0.4;
+        this.maxSwimSpeed = 100.0;
+
+        this.tailSpeed = 200;
+        this.minTailSpeed = 200;
+        this.maxTailSpeed = 1000;
+    
+        this.tailStrength = 0.05;
+        this.minTailStrength = 0.03;
+        this.maxTailStrength = 0.6;
+
         this.tailPhase = 0;
-        this.scale = 2;
+        this.scale = random(1.2, 1.8);
 
         let paletteData = random(palettes);
         this.colors = paletteData.map(c => color(c[0], c[1], c[2]));
@@ -92,30 +99,44 @@ class Koi {
     }
 
     avoidBounds(pos) {
+        // Mirror desired direction if sensor is out of bounds
+        let outOfBounds = false;
         let newDir = this.desiredDir.copy();
-
-        if ((pos.x < 0 && newDir.x < 0) || (pos.x > width && newDir.x > 0)) newDir.x *= -1;
-        if ((pos.y < 0 && newDir.y < 0) || (pos.y > height && newDir.y > 0)) newDir.y *= -1;
+        
+        if ((pos.x < 0 && newDir.x < 0) || (pos.x > width && newDir.x > 0)) {
+            newDir.x *= -1;
+            outOfBounds = true;
+        }
+        if ((pos.y < 0 && newDir.y < 0) || (pos.y > height && newDir.y > 0)) {
+            newDir.y *= -1;
+            outOfBounds = true;
+        } 
 
         this.desiredDir = newDir.normalize();
+        return outOfBounds;
     }
 
-    fulfillDesire() {
+    fulfillDesire(dt) {
         // Rotate towards desired direction
-        let angleThreshold = 2;
-        let turnSpeed = 120 * (deltaTime / 1000);
+        let epsilon = 0.1;
         let angle = this.dir.angleBetween(this.desiredDir);    
-        if(angle > angleThreshold) this.dir.rotate(turnSpeed);
-        else if(angle < -angleThreshold) this.dir.rotate(-turnSpeed);
+        if(angle > epsilon) this.dir.rotate(this.turnSpeed * dt);
+        else if(angle < -epsilon) this.dir.rotate(-this.turnSpeed * dt);
     }
 
     update() {
+        const dt = min(deltaTime / 1000, 0.1); // Capped so switching windows doesnt break movement
+  
         let sensorPos = this.pos.copy().add(this.dir.copy().mult(120));
+        let avoidingBounds = this.avoidBounds(sensorPos);
+        if(avoidingBounds) {
+            this.framesToNextTurn += 200; // Dont change direction right after avoiding
+        }
 
         // Change direction
         this.framesToNextTurn -= 1;
         if(this.framesToNextTurn < 0) {
-            let newAngle = random(-90, 90);
+            let newAngle = random(-this.maxTurnAngle, this.maxTurnAngle);
             let newDir = this.desiredDir.copy().rotate(newAngle);
             let newSensorPos = this.pos.copy().add(newDir.copy().mult(120));
             if(this.inBounds(newSensorPos)) {
@@ -124,9 +145,7 @@ class Koi {
             }
         }
 
-        this.avoidBounds(sensorPos);
-
-        this.fulfillDesire();      
+        this.fulfillDesire(dt);
 
         // Turning behaviour
         let desiredAngle = this.dir.angleBetween(this.desiredDir);
@@ -134,27 +153,27 @@ class Koi {
 
         if(turnFactor > 0.02) {
             // Turning
-            this.dir.rotate(sin(frameCount*20.0)*5); // Head wobble
-            this.tailStrength = lerp(this.tailStrength, this.maxTailStrength, 0.1 * turnFactor);
-            this.tailSpeed = lerp(this.tailSpeed, this.maxTailSpeed, 0.2 * turnFactor);
-            this.swimSpeed = lerp(this.swimSpeed, this.maxSwimSpeed, 0.2 * turnFactor);
+            this.dir.rotate(sin(this.tailPhase) * 4); // Head wobble
+            this.tailStrength = lerp(this.tailStrength, this.maxTailStrength, 8 * dt * turnFactor);
+            this.tailSpeed = lerp(this.tailSpeed, this.maxTailSpeed, 16 * dt * turnFactor);
+            this.swimSpeed = lerp(this.swimSpeed, this.maxSwimSpeed, 8 * dt * turnFactor);
         } 
         else {
             // Straight
-            this.tailStrength = lerp(this.tailStrength, this.minTailStrength, 0.05 * (1 - turnFactor));
-            this.tailSpeed = lerp(this.tailSpeed, this.minTailSpeed, 0.1 * (1 - turnFactor));
-            this.swimSpeed = lerp(this.swimSpeed, this.minSwimSpeed, 0.05 * (1 - turnFactor));
+            this.tailStrength = lerp(this.tailStrength, this.minTailStrength, 4 * dt * (1 - turnFactor));
+            this.tailSpeed = lerp(this.tailSpeed, this.minTailSpeed, 8 * dt * (1 - turnFactor));
+            this.swimSpeed = lerp(this.swimSpeed, this.minSwimSpeed, 4 * dt * (1 - turnFactor));
         }
 
-        this.tailPhase += this.tailSpeed * deltaTime;
-        let phaseOffset = 12;
+        this.tailPhase += this.tailSpeed * dt;
+        let phaseOffset = 16;
         for(let i = 1; i < this.segments.length; i++) {
             let a = sin(this.tailPhase - i * phaseOffset) * i * i * this.tailStrength;
             this.segments[i].setRotation(a);
         }
 
         // Add velocity to fish pos
-        let velocity = this.dir.copy().mult(this.swimSpeed * (deltaTime / 1000))
+        let velocity = this.dir.copy().mult(this.swimSpeed * dt)
         this.pos.add(velocity);
 
         // Update segment positions
@@ -192,5 +211,23 @@ class Koi {
             let sensorPos1 = this.pos.copy().add(this.desiredDir.copy().mult(120));
             line(this.pos.x, this.pos.y, sensorPos1.x, sensorPos1.y);
         }
+    }
+
+    drawShadow() {
+        const shadowColor = color(167, 192, 184);
+
+        push();
+        translate(15, 15);
+
+        // Side fins
+        this.segments[2].drawSideFins(shadowColor);
+        this.segments[5].drawSideFins(shadowColor);
+
+        // Body segments
+        for (let i = 0; i < this.segments.length; i++) {
+            this.segments[i].draw(shadowColor);
+        }
+
+        pop();
     }
 }

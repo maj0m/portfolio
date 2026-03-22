@@ -73,7 +73,7 @@ class Koi {
         this.minTailSpeed = 200;
         this.maxTailSpeed = 1000;
     
-        this.tailStrength = 0.05;
+        this.tailStrength = 0.03;
         this.minTailStrength = 0.03;
         this.maxTailStrength = 0.6;
 
@@ -167,7 +167,7 @@ class Koi {
                     pellets.splice(targetIdx, 1);
                     this.target = null;
                     this.wandering = true;
-                    this.turnSpeed /= 2;
+                    this.turnSpeed = this.baseTurnSpeed;
                 }
             }
         }
@@ -217,8 +217,8 @@ class Koi {
         this.tailPhase += this.tailSpeed * dt;
         let phaseOffset = 16;
         for(let i = 1; i < this.segments.length; i++) {
-            let a = sin(this.tailPhase - i * phaseOffset) * i * i * this.tailStrength;
-            this.segments[i].setRotation(a);
+            let segAngle = sin(this.tailPhase - i * phaseOffset) * i * i * this.tailStrength;
+            this.segments[i].setRotation(segAngle);
         }
 
         // Add velocity to fish pos

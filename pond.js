@@ -45,6 +45,7 @@ function draw() {
 }
 
 function mouseClicked() {
+    if(event.target.closest("a, section, button")) return;
     pellets.push(new Pellet(mouseX, mouseY));
 }
 

@@ -8,8 +8,8 @@ links.forEach(link => {
 
 // Popup
 document.addEventListener("click", function (event) {
-    // Ignore clicks inside links, buttons, or form elements
-    if (event.target.closest("a, button, input, textarea, select")) return;
+    // Only allow popup on sections
+    if(!event.target.closest("section")) return;
 
     const popups = ["mik", "mak", "mikmak"];
     const popup = document.createElement("span");

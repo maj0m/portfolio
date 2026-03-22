@@ -61,6 +61,7 @@ class Koi {
         this.target = null;
 
         this.turnSpeed = 120;
+        this.baseTurnSpeed = 120;
         this.framesToNextTurn = 500;
         this.maxTurnAngle = 90;
 
@@ -138,7 +139,7 @@ class Koi {
                     // Target located
                     this.target = pellet;
                     this.wandering = false;
-                    this.turnSpeed *= 2; // Allow for sharper turns to avoid death loop
+                    this.turnSpeed = this.baseTurnSpeed * 2; // Allow for sharper turns to avoid death loop
                 }
             }
         }
@@ -151,7 +152,7 @@ class Koi {
                 // Target no longer exists, back to wandering
                 this.target = null;
                 this.wandering = true;
-                this.turnSpeed /= 2;
+                this.turnSpeed = this.baseTurnSpeed;
             }
 
             else {

@@ -1,25 +1,51 @@
 let fish = [];
+let pellets = [];
+let ripples = [];
 
 function setup() {
     angleMode(DEGREES);
     createCanvas(window.innerWidth, window.innerHeight);
 
-    for(let i = 0; i < 16; i++) {
+    for(let i = 0; i < 12; i++) {
         fish.push(new Koi());
     }
 }
 
 function draw() {
     background(180, 210, 200);
-    
-    for (let koi of fish) {
-        koi.drawShadow();
+
+    const shadowColor = color(167, 192, 184);
+
+    const dt = min(deltaTime / 1000, 0.1); // Capped so switching windows doesnt break movement
+
+    // Shadows
+    for(let koi of fish) {
+        koi.drawShadow(shadowColor);
     }
-    
-    for (let koi of fish) {
-        koi.update();
+
+    for(let pellet of pellets) {
+        pellet.drawShadow(shadowColor);
+    }
+
+    // Objects
+    for(let koi of fish) {
+        koi.update(pellets, dt);
         koi.draw();
     }
+
+    for(let ripple of ripples) {
+        ripple.update(dt);
+        ripple.draw();
+    }
+
+    for(let pellet of pellets) {
+        pellet.update(ripples, dt);
+        pellet.draw();
+    }
+}
+
+function mouseClicked() {
+    pellets.push(new Pellet(mouseX, mouseY));
 }
 
 function windowResized() {

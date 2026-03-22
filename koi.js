@@ -56,6 +56,10 @@ class Koi {
         this.dir = createVector(random(-1, 1), random(-1, 1)).normalize();
         this.desiredDir = this.dir.copy();
 
+        this.sensorRange = 160;
+        this.wandering = true;
+        this.target = null;
+
         this.turnSpeed = 120;
         this.framesToNextTurn = 500;
         this.maxTurnAngle = 90;
@@ -100,6 +104,7 @@ class Koi {
 
     avoidBounds(pos) {
         // Mirror desired direction if sensor is out of bounds
+        // Returns true if direction was mirrored
         let outOfBounds = false;
         let newDir = this.desiredDir.copy();
         
@@ -118,27 +123,70 @@ class Koi {
 
     fulfillDesire(dt) {
         // Rotate towards desired direction
-        let epsilon = 0.1;
+        let epsilon = 1.0;
         let angle = this.dir.angleBetween(this.desiredDir);    
         if(angle > epsilon) this.dir.rotate(this.turnSpeed * dt);
         else if(angle < -epsilon) this.dir.rotate(-this.turnSpeed * dt);
     }
 
-    update() {
-        const dt = min(deltaTime / 1000, 0.1); // Capped so switching windows doesnt break movement
-  
-        let sensorPos = this.pos.copy().add(this.dir.copy().mult(120));
+    lookForFood(pellets) {
+        // Search phase
+        if(this.wandering) {
+            for(let pellet of pellets) {
+                let distToPellet = this.pos.dist(pellet.pos);
+                if(distToPellet < this.sensorRange) {
+                    // Target located
+                    this.target = pellet;
+                    this.wandering = false;
+                    this.turnSpeed *= 2; // Allow for sharper turns to avoid death loop
+                }
+            }
+        }
+
+        // Track target
+        else {
+            let targetIdx = pellets.indexOf(this.target);
+
+            if(this.target.consumed || targetIdx < 0) {
+                // Target no longer exists, back to wandering
+                this.target = null;
+                this.wandering = true;
+                this.turnSpeed /= 2;
+            }
+
+            else {
+                // Hunt down target
+                let dirToTarget = p5.Vector.sub(this.target.pos, this.pos).normalize();
+                this.desiredDir = dirToTarget;
+
+                let distToTarget = this.pos.dist(this.target.pos);
+                if(distToTarget < 5) {
+                    // Consume target
+                    this.target.consume();
+                    pellets.splice(targetIdx, 1);
+                    this.target = null;
+                    this.wandering = true;
+                    this.turnSpeed /= 2;
+                }
+            }
+        }
+    }   
+
+    update(pellets, dt) {  
+        let sensorPos = this.pos.copy().add(this.dir.copy().mult(this.sensorRange));
         let avoidingBounds = this.avoidBounds(sensorPos);
         if(avoidingBounds) {
             this.framesToNextTurn += 200; // Dont change direction right after avoiding
         }
 
+        this.lookForFood(pellets);
+
         // Change direction
-        this.framesToNextTurn -= 1;
+        if(this.wandering) this.framesToNextTurn -= 1;
         if(this.framesToNextTurn < 0) {
             let newAngle = random(-this.maxTurnAngle, this.maxTurnAngle);
             let newDir = this.desiredDir.copy().rotate(newAngle);
-            let newSensorPos = this.pos.copy().add(newDir.copy().mult(120));
+            let newSensorPos = this.pos.copy().add(newDir.copy().mult(this.sensorRange));
             if(this.inBounds(newSensorPos)) {
                 this.desiredDir.rotate(newAngle);
                 this.framesToNextTurn = random(200, 500);
@@ -153,7 +201,7 @@ class Koi {
 
         if(turnFactor > 0.02) {
             // Turning
-            this.dir.rotate(sin(this.tailPhase) * 4); // Head wobble
+            //this.dir.rotate(sin(this.tailPhase) * 4); // Head wobble
             this.tailStrength = lerp(this.tailStrength, this.maxTailStrength, 8 * dt * turnFactor);
             this.tailSpeed = lerp(this.tailSpeed, this.maxTailSpeed, 16 * dt * turnFactor);
             this.swimSpeed = lerp(this.swimSpeed, this.maxSwimSpeed, 8 * dt * turnFactor);
@@ -213,19 +261,17 @@ class Koi {
         }
     }
 
-    drawShadow() {
-        const shadowColor = color(167, 192, 184);
-
+    drawShadow(color) {
         push();
         translate(15, 15);
 
         // Side fins
-        this.segments[2].drawSideFins(shadowColor);
-        this.segments[5].drawSideFins(shadowColor);
+        this.segments[2].drawSideFins(color);
+        this.segments[5].drawSideFins(color);
 
         // Body segments
         for (let i = 0; i < this.segments.length; i++) {
-            this.segments[i].draw(shadowColor);
+            this.segments[i].draw(color);
         }
 
         pop();

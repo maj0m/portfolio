@@ -1,7 +1,7 @@
 class Segment {
     constructor(x, y, l, wA, wB, color) {
         this.A = createVector(x, y);
-        this.B = createVector(x + l, y);
+        this.B = createVector(x + 1, y);
         this.dir = p5.Vector.sub(this.B, this.A).normalize();
         this.length = l;
         this.widthA = wA;

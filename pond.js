@@ -59,6 +59,8 @@ function draw() {
 }
 
 function mouseClicked() {
+    if(event.target.closest("a, section, button")) return;
+    
     let clickPos = createVector(mouseX, mouseY);
     for(let lilypad of lilypads) {
         if(clickPos.dist(lilypad.pos) < lilypad.radius) {

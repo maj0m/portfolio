@@ -1,28 +1,43 @@
 class Ripple {
-    constructor(x, y) {
+    constructor(x, y, baseRadius = 0, maxSpread = 30) {
         this.pos = createVector(x, y);
-        this.age = 0;
-        this.baseRadius = 0;
-        this.maxRadius = 50;
-        this.radiusMultipliers = [0.1, 0.4, 0.7, 1.0];
-        this.spreadSpeed = 50;
-        this.minSpreadSpeed = 20;
+        this.radius = baseRadius;
+        this.baseRadius = baseRadius;
+        this.maxSpread = maxSpread;
+
+        this.ringCount = 5;
+        this.ringSpacing = 6;
+
+        this.spreadSpeed = 16;
+        this.minSpreadSpeed = 10;
+
+        this.color = color(135, 163, 154);
+        this.maxAlpha = 128;
     }
 
     update(dt) {
-        this.baseRadius += this.spreadSpeed * dt;
+        this.radius += this.spreadSpeed * dt;
         this.spreadSpeed = lerp(this.spreadSpeed, this.minSpreadSpeed, 2 * dt);
     }
 
     draw() {
         noFill();
-        strokeWeight(1);
-        
-        for(let i = 0; i < this.radiusMultipliers.length; i++) {
-            let radius = this.baseRadius * this.radiusMultipliers[i];
-            let alpha = (1 - radius / this.maxRadius) * 255 * this.radiusMultipliers[i];
-            stroke(135, 163, 154, alpha);
-            circle(this.pos.x, this.pos.y, radius);
+        strokeWeight(2);
+
+        for (let i = 0; i < this.ringCount; i++) {
+            let ringRadius = this.radius - i * this.ringSpacing;
+
+            if (ringRadius <= this.baseRadius || ringRadius >= this.baseRadius + this.maxSpread) continue;
+            
+            // Calculate alpha based on distance and index
+            let t = (ringRadius - this.baseRadius) / this.maxSpread;
+            let distanceFade = (1 - t) ** 2;
+            let indexFade = (1 - i / this.ringCount) ** 3;
+            let alpha = this.maxAlpha * distanceFade * indexFade;
+            this.color.setAlpha(alpha);
+
+            stroke(this.color);
+            circle(this.pos.x, this.pos.y, ringRadius * 2);
         }
     }
 }

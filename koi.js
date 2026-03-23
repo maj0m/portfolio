@@ -56,12 +56,11 @@ class Koi {
         this.dir = createVector(random(-1, 1), random(-1, 1)).normalize();
         this.desiredDir = this.dir.copy();
 
-        this.sensorRange = 160;
+        this.sensorRange = 180;
         this.wandering = true;
         this.target = null;
 
         this.turnSpeed = 120;
-        this.baseTurnSpeed = 120;
         this.framesToNextTurn = 500;
         this.maxTurnAngle = 90;
 
@@ -78,7 +77,8 @@ class Koi {
         this.maxTailStrength = 0.6;
 
         this.tailPhase = 0;
-        this.scale = random(1.2, 1.8);
+        this.tailPhaseOffset = 16;
+        this.scale = random(1.2, 2);
 
         let paletteData = random(palettes);
         this.colors = paletteData.map(c => color(c[0], c[1], c[2]));
@@ -135,11 +135,10 @@ class Koi {
         if(this.wandering) {
             for(let pellet of pellets) {
                 let distToPellet = this.pos.dist(pellet.pos);
-                if(distToPellet < this.sensorRange) {
+                if(pellet.dropped && distToPellet < this.sensorRange) {
                     // Target located
                     this.target = pellet;
                     this.wandering = false;
-                    this.turnSpeed = this.baseTurnSpeed * 2; // Allow for sharper turns to avoid death loop
                 }
             }
         }
@@ -152,22 +151,31 @@ class Koi {
                 // Target no longer exists, back to wandering
                 this.target = null;
                 this.wandering = true;
-                this.turnSpeed = this.baseTurnSpeed;
             }
 
             else {
                 // Hunt down target
                 let dirToTarget = p5.Vector.sub(this.target.pos, this.pos).normalize();
-                this.desiredDir = dirToTarget;
-
                 let distToTarget = this.pos.dist(this.target.pos);
+
+                let dot = this.dir.dot(dirToTarget); // How aligned fish dir is to target
+                let turnRadius = this.swimSpeed / radians(this.turnSpeed);
+                let needsRunway = dot < 0.3 && distToTarget < turnRadius * 2;
+                
+                if (needsRunway) {
+                    // Steer away first
+                    this.desiredDir = dirToTarget.copy().mult(-1);
+                } else {
+                    // Steer towards target
+                    this.desiredDir = dirToTarget;
+                }
+
                 if(distToTarget < 5) {
                     // Consume target
                     this.target.consume();
                     pellets.splice(targetIdx, 1);
                     this.target = null;
                     this.wandering = true;
-                    this.turnSpeed = this.baseTurnSpeed;
                 }
             }
         }
@@ -215,9 +223,8 @@ class Koi {
         }
 
         this.tailPhase += this.tailSpeed * dt;
-        let phaseOffset = 16;
         for(let i = 1; i < this.segments.length; i++) {
-            let segAngle = sin(this.tailPhase - i * phaseOffset) * i * i * this.tailStrength;
+            let segAngle = sin(this.tailPhase - i * this.tailPhaseOffset) * i * i * this.tailStrength;
             this.segments[i].setRotation(segAngle);
         }
 
@@ -254,16 +261,18 @@ class Koi {
         // Debug
         if(DEBUG_MODE) {
             stroke(0);
-            let sensorPos = this.pos.copy().add(this.dir.copy().mult(120));
-            line(this.pos.x, this.pos.y, sensorPos.x, sensorPos.y);
+            let dir = this.pos.copy().add(this.dir.copy().mult(this.sensorRange));
+            line(this.pos.x, this.pos.y, dir.x, dir.y);
+
             stroke(255, 0, 0);
-            let sensorPos1 = this.pos.copy().add(this.desiredDir.copy().mult(120));
-            line(this.pos.x, this.pos.y, sensorPos1.x, sensorPos1.y);
+            let desiredDir = this.pos.copy().add(this.desiredDir.copy().mult(this.sensorRange));
+            line(this.pos.x, this.pos.y, desiredDir.x, desiredDir.y);
         }
     }
 
     drawShadow(color) {
         push();
+
         translate(15, 15);
 
         // Side fins

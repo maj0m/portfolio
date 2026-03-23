@@ -1,6 +1,7 @@
 let fish = [];
 let pellets = [];
 let ripples = [];
+let lilypads = [];
 
 function setup() {
     angleMode(DEGREES);
@@ -8,6 +9,10 @@ function setup() {
 
     for(let i = 0; i < 12; i++) {
         fish.push(new Koi());
+    }
+
+    for(let i = 0; i < 8; i++) {
+        lilypads.push(new Lilypad(random(width * 0.1, width * 0.9), random(height * 0.1, height * 0.9)));
     }
 }
 
@@ -27,6 +32,10 @@ function draw() {
         pellet.drawShadow(shadowColor);
     }
 
+    for(let lilypad of lilypads) {
+        lilypad.drawShadow(shadowColor)
+    }
+
     // Objects
     for(let koi of fish) {
         koi.update(pellets, dt);
@@ -38,6 +47,11 @@ function draw() {
         ripple.draw();
     }
 
+    for(let lilypad of lilypads) {
+        lilypad.update(ripples, dt);
+        lilypad.draw();
+    }
+
     for(let pellet of pellets) {
         pellet.update(ripples, dt);
         pellet.draw();
@@ -45,8 +59,15 @@ function draw() {
 }
 
 function mouseClicked() {
-    if(event.target.closest("a, section, button")) return;
-    pellets.push(new Pellet(mouseX, mouseY));
+    let clickPos = createVector(mouseX, mouseY);
+    for(let lilypad of lilypads) {
+        if(clickPos.dist(lilypad.pos) < lilypad.radius) {
+            lilypad.bob();
+            return;
+        }
+    }
+    
+    pellets.push(new Pellet(clickPos.x, clickPos.y));
 }
 
 function windowResized() {

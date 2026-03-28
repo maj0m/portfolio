@@ -12,7 +12,7 @@ function setup() {
     }
 
     for(let i = 0; i < 8; i++) {
-        lilypads.push(new Lilypad(random(width * 0.1, width * 0.9), random(height * 0.1, height * 0.9)));
+        lilypads.push(new Lilypad(lilypads));
     }
 }
 

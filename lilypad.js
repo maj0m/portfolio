@@ -1,7 +1,8 @@
 class Lilypad {
-    constructor(x, y) {
-        this.pos = createVector(x, y);
+    constructor(lilypads) {
+        this.pos = createVector(0, 0);
         this.radius = random(20, 40);
+        
         this.segments = 5;
         this.arcAngle = 340;
         this.petalCount = 7;
@@ -13,12 +14,14 @@ class Lilypad {
         this.stamenColor = color(249, 168, 37);
         this.rotation = random(0, 360);
 
+        this.placed = false;
         this.bobbed = false;
         this.bobTimer = 0;
         this.bobDuration = 1.4;
         this.bobScale = 1.0;
         this.bobStrength = 0.2;
 
+        this.place(lilypads);
         this.hasFlower = random(0, 1) < 0.3 ? true : false;
         this.segAngle = this.arcAngle / this.segments;
         this.outerPetalDist = 0.32 * this.radius;
@@ -32,13 +35,39 @@ class Lilypad {
         this.innerStamenDist = 0.04 * this.radius;
     }
 
+    place(lilypads, maxAttempts = 10) {
+        for(let i = 0; i < maxAttempts; i++) {
+            let pos = createVector(random(this.radius, width - this.radius), random(this.radius, height - this.radius));
+            let validPos = true;
+
+            // Check if pos is valid
+            for(let lilypad of lilypads) {
+                let dist = pos.dist(lilypad.pos);
+                let minDist = this.radius + lilypad.radius;
+                if(dist < minDist) {
+                    validPos = false;
+                    break;
+                }
+            }
+
+            // Place
+            if(validPos) {
+                this.pos = pos;
+                this.placed = true;
+                break;
+            }
+        }
+
+        if(!this.placed) print("couldn't place :(");
+    }
+
     bob() {
         this.bobTimer = this.bobDuration;
         this.bobbed = true;
     }
 
     update(ripples, dt) {
-        if (this.bobTimer <= 0) return;
+        if (!this.placed || this.bobTimer <= 0) return;
 
         this.bobTimer -= dt;
         
@@ -56,6 +85,8 @@ class Lilypad {
     }
 
     draw() {
+        if(!this.placed) return;
+
         push();
 
         translate(this.pos.x, this.pos.y);
@@ -106,6 +137,8 @@ class Lilypad {
     }
 
     drawShadow(shadowColor) {
+        if(!this.placed) return;
+
         push();
 
         translate(this.pos.x + 10, this.pos.y + 10);

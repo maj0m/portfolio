@@ -3,6 +3,11 @@ class Segment {
         this.A = createVector(x, y);
         this.B = createVector(x + 1, y);
         this.dir = p5.Vector.sub(this.B, this.A).normalize();
+
+        this.baseLength = l;
+        this.baseWidthA = wA;
+        this.baseWidthB = wB;
+
         this.length = l;
         this.widthA = wA;
         this.widthB = wB;
@@ -23,6 +28,12 @@ class Segment {
         newDir.rotate(angle);
         newDir.setMag(this.length);
         this.B = p5.Vector.add(this.A, newDir);
+    }
+
+    grow(factor) {
+        // Scale width based on growth factor
+        this.widthA = this.baseWidthA * factor;
+        this.widthB = this.baseWidthB * factor;
     }
 
     draw(color = this.color) {

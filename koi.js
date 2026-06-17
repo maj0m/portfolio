@@ -80,6 +80,12 @@ class Koi {
         this.tailPhaseOffset = 16;
         this.scale = random(1.2, 2);
 
+        this.growthFactor = 1.0;
+        this.targetGrowthFactor = this.growthFactor;
+        this.maxGrowthFactor = 2.5;
+        this.growthPerPellet = 0.5;
+        this.growthSpeed = 1.0;
+
         let paletteData = random(palettes);
         this.colors = paletteData.map(c => color(c[0], c[1], c[2]));
         this.finColor = this.colors[0];
@@ -97,6 +103,8 @@ class Koi {
                 segmentColor
             ));
         }
+
+        this.particles = [];
     }
 
     inBounds(pos) {
@@ -176,12 +184,44 @@ class Koi {
                     pellets.splice(targetIdx, 1);
                     this.target = null;
                     this.wandering = true;
+                    this.grow();
                 }
             }
         }
-    }   
+    }
 
-    update(pellets, dt) {  
+    grow() {
+        // Add pellet to target size
+        this.targetGrowthFactor = min(this.targetGrowthFactor + this.growthPerPellet, this.maxGrowthFactor);
+    }
+
+    update(pellets, dt) {
+        // Update growth state
+        this.growthFactor = lerp(this.growthFactor, this.targetGrowthFactor, this.growthSpeed * dt);
+        for(let segment of this.segments) {
+            segment.grow(this.growthFactor);
+        }
+
+        // Explode and shrink after overeating
+        if(this.growthFactor > this.maxGrowthFactor * 0.9) {
+            for(let i = 0; i < 100; i++) {
+                this.particles.push(new Particle(this.pos.x, this.pos.y, random(this.colors)));
+            }
+
+            this.targetGrowthFactor = 1.0; // Shrink back to normal size
+        }
+
+        // Update particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            this.particles[i].update(dt);
+
+            // Remove if dead
+            if (this.particles[i].isDead()) {
+                this.particles.splice(i, 1);
+            }
+        }
+
+        // Avoid bounds
         let sensorPos = this.pos.copy().add(this.dir.copy().mult(this.sensorRange));
         let avoidingBounds = this.avoidBounds(sensorPos);
         if(avoidingBounds) {
@@ -240,6 +280,10 @@ class Koi {
     }
 
     draw() {
+        for(let particle of this.particles) {
+            particle.draw();
+        }
+
         // Side fins
         this.segments[2].drawSideFins(this.finColor);
         this.segments[5].drawSideFins(this.finColor);

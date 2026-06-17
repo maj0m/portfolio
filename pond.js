@@ -7,11 +7,18 @@ function setup() {
     angleMode(DEGREES);
     createCanvas(window.innerWidth, window.innerHeight);
 
-    for(let i = 0; i < 12; i++) {
+    const REFERENCE_AREA = 1920 * 1080;
+    const area = window.innerWidth * window.innerHeight;
+    const scale = area / REFERENCE_AREA;
+
+    const koiCount = max(6, round(20 * scale));
+    const lilypadCount = max(4, round(16 * scale));
+
+    for(let i = 0; i < koiCount; i++) {
         fish.push(new Koi());
     }
 
-    for(let i = 0; i < 8; i++) {
+    for(let i = 0; i < lilypadCount; i++) {
         lilypads.push(new Lilypad(lilypads));
     }
 }

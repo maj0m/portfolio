@@ -3,7 +3,7 @@ class Pellet {
         this.pos = createVector(x, y);
         this.radius = 6;
         this.minRadius = this.radius;
-        this.maxRadius = 12;
+        this.maxRadius = this.radius + 6;
         this.height = 100;
         this.maxHeight = this.height;
         this.fallSpeed = 200;
